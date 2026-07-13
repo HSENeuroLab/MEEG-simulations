@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import mne
+import pickle
+import os
 from mne.datasets import eegbci, fetch_fsaverage
 from scipy.io import savemat
 import matplotlib.pyplot as plt
@@ -57,7 +59,9 @@ ax.scatter(elec_rr_mri[:, 0], elec_rr_mri[:, 1], elec_rr_mri[:, 2],
 
 ax.set_title('Проверка прилегания электродов к BEM-модели')
 ax.legend()
-plt.show()
+# Сохраняем график вместо отображения, чтобы скрипт не блокировался
+plt.savefig(os.path.join(os.path.dirname(__file__), 'electrode_bem_check.png'))
+plt.close(fig)
 
 # %%
 # --- 3. Расчет прямой модели ---
@@ -113,8 +117,23 @@ elec_struct = {
     'fid': fid_struct  
 }
 
-savemat('forward_model.mat', {
+output_mat = os.path.join(os.path.dirname(__file__), 'forward_model.mat')
+savemat(output_mat, {
     'leadfield': leadfield,
     'src_pos': src_pos,
     'elec': elec_struct
 })
+
+# --- 5. Экспорт в Python (.pkl) ---
+# Сохраняем те же переменные в pickle файл для удобного использования в Python
+output_pkl = os.path.join(os.path.dirname(__file__), 'forward_model.pkl')
+with open(output_pkl, 'wb') as f:
+    pickle.dump({
+        'leadfield': leadfield,
+        'src_pos': src_pos,
+        'elec': elec_struct,
+        'ch_names': ch_names,
+        'fid': fid_struct
+    }, f)
+
+print(f"Прямая модель сохранена в:\n{output_mat}\n{output_pkl}")
